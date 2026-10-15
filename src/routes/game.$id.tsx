@@ -128,7 +128,7 @@ function GamePage() {
       return;
     }
     try {
-      await makeMove({ data: { gameId: id, token, from, to, promotion } });
+      await makeMove({ data: { gameId: id, token, from, to, ...(promotion ? { promotion } : {}) } });
     } catch (e) {
       setErr((e as Error).message);
       const { data } = await supabase.from("games").select("*").eq("id", id).single();
@@ -145,7 +145,9 @@ function GamePage() {
   const orientation = flipped ? (base === "white" ? "black" : "white") : base;
   const top = orientation === "white" ? "black" : "white";
   const bottom = orientation;
-  const inviteUrl = typeof window !== "undefined" ? window.location.href : "";
+  // Always share the published site URL — the editor preview URL requires a Lovable login.
+  const inviteUrl =
+    typeof window !== "undefined" ? `https://two-play-sync.lovable.app${window.location.pathname}` : "";
   const canJoin = !myColor && game.status === "waiting";
   const oppOfferedDraw = myColor && game.draw_offer && game.draw_offer !== myColor;
 
@@ -174,7 +176,10 @@ function GamePage() {
 
   const rows: [string, string | undefined][] = [];
   const sans = (game.moves as string[]) ?? [];
-  for (let i = 0; i < sans.length; i += 2) rows.push([sans[i], sans[i + 1]]);
+  for (let i = 0; i < sans.length; i += 2) {
+    const w = sans[i];
+    if (w) rows.push([w, sans[i + 1]]);
+  }
 
   const resultText =
     game.result === "1/2-1/2"
