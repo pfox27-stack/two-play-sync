@@ -145,7 +145,9 @@ function GamePage() {
   const orientation = flipped ? (base === "white" ? "black" : "white") : base;
   const top = orientation === "white" ? "black" : "white";
   const bottom = orientation;
-  const inviteUrl = typeof window !== "undefined" ? window.location.href : "";
+  // Always share the published site URL — the editor preview URL requires a Lovable login.
+  const inviteUrl =
+    typeof window !== "undefined" ? `https://two-play-sync.lovable.app${window.location.pathname}` : "";
   const canJoin = !myColor && game.status === "waiting";
   const oppOfferedDraw = myColor && game.draw_offer && game.draw_offer !== myColor;
 
