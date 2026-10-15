@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_seats: {
+        Row: {
+          color: string
+          game_id: string
+          token: string
+        }
+        Insert: {
+          color: string
+          game_id: string
+          token: string
+        }
+        Update: {
+          color?: string
+          game_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_seats_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          base_ms: number
+          black_name: string | null
+          black_time_ms: number
+          created_at: string
+          draw_offer: string | null
+          fen: string
+          id: string
+          increment_ms: number
+          last_move_at: string | null
+          moves: Json
+          pgn: string
+          reason: string | null
+          result: string | null
+          status: string
+          white_name: string | null
+          white_time_ms: number
+        }
+        Insert: {
+          base_ms?: number
+          black_name?: string | null
+          black_time_ms?: number
+          created_at?: string
+          draw_offer?: string | null
+          fen?: string
+          id?: string
+          increment_ms?: number
+          last_move_at?: string | null
+          moves?: Json
+          pgn?: string
+          reason?: string | null
+          result?: string | null
+          status?: string
+          white_name?: string | null
+          white_time_ms?: number
+        }
+        Update: {
+          base_ms?: number
+          black_name?: string | null
+          black_time_ms?: number
+          created_at?: string
+          draw_offer?: string | null
+          fen?: string
+          id?: string
+          increment_ms?: number
+          last_move_at?: string | null
+          moves?: Json
+          pgn?: string
+          reason?: string | null
+          result?: string | null
+          status?: string
+          white_name?: string | null
+          white_time_ms?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
