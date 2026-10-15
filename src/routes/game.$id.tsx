@@ -176,7 +176,10 @@ function GamePage() {
 
   const rows: [string, string | undefined][] = [];
   const sans = (game.moves as string[]) ?? [];
-  for (let i = 0; i < sans.length; i += 2) rows.push([sans[i], sans[i + 1]]);
+  for (let i = 0; i < sans.length; i += 2) {
+    const w = sans[i];
+    if (w) rows.push([w, sans[i + 1]]);
+  }
 
   const resultText =
     game.result === "1/2-1/2"

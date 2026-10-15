@@ -30,7 +30,7 @@ const CONTROLS = [
 function Index() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [tc, setTc] = useState(CONTROLS[2]);
+  const [tc, setTc] = useState(CONTROLS[2] ?? CONTROLS[0]!);
   const [color, setColor] = useState<"white" | "black" | "random">("random");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
