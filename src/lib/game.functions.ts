@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { Chess } from "chess.js";
+import type { Database } from "@/integrations/supabase/types";
 
 type Color = "white" | "black";
+type GameUpdate = Database["public"]["Tables"]["games"]["Update"];
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -126,7 +128,7 @@ export const makeMove = createServerFn({ method: "POST" })
     } catch {
       throw new Error("Illegal move");
     }
-    const update = {
+    const update: GameUpdate = {
       fen: chess.fen(),
       pgn: chess.pgn(),
       moves: [...history, move.san],
@@ -157,11 +159,8 @@ export const gameAction = createServerFn({ method: "POST" })
       const key = turn === "white" ? "white_time_ms" : "black_time_ms";
       const elapsed = game.last_move_at ? Date.now() - new Date(game.last_move_at).getTime() : 0;
       if ((game[key] as number) - elapsed <= 0) {
-        await db
-          .from("games")
-          .update({ [key]: 0, status: "finished", result: turn === "white" ? "0-1" : "1-0", reason: "timeout" })
-          .eq("id", game.id)
-          .eq("status", "active");
+        const update: GameUpdate = { [key]: 0, status: "finished", result: turn === "white" ? "0-1" : "1-0", reason: "timeout" };
+        await db.from("games").update(update).eq("id", game.id).eq("status", "active");
       }
       return { ok: true };
     }
