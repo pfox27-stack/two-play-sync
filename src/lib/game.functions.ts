@@ -36,7 +36,7 @@ export const createGame = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }) => {
     const db = await admin();
-    const color: Color = data.color === "random" ? (Math.random() < 0.5 ? "white" : "black") : data.color;
+    const color: Color = data.color === "random" ? (Math.random() < 0.5 ? "white" : "black") : (data.color as Color);
     const base = Math.round(data.baseMin * 60000);
     const { data: game, error } = await db
       .from("games")
@@ -67,10 +67,12 @@ export const joinGame = createServerFn({ method: "POST" })
     const token = randomToken();
     const { error } = await db.from("game_seats").insert({ game_id: game.id, color, token });
     if (error) throw new Error("Seat already taken");
-    await db
-      .from("games")
-      .update({ [color === "white" ? "white_name" : "black_name"]: data.name, status: "active", last_move_at: new Date().toISOString() })
-      .eq("id", game.id);
+    const joinUpdate: GameUpdate = {
+      [color === "white" ? "white_name" : "black_name"]: data.name,
+      status: "active",
+      last_move_at: new Date().toISOString(),
+    };
+    await db.from("games").update(joinUpdate).eq("id", game.id);
     return { token, color };
   });
 
@@ -115,10 +117,8 @@ export const makeMove = createServerFn({ method: "POST" })
     const key = color === "white" ? "white_time_ms" : "black_time_ms";
     const remaining = (game[key] as number) - elapsed;
     if (remaining <= 0) {
-      await db
-        .from("games")
-        .update({ [key]: 0, status: "finished", result: color === "white" ? "0-1" : "1-0", reason: "timeout" })
-        .eq("id", game.id);
+      const timeoutUpdate: GameUpdate = { [key]: 0, status: "finished", result: color === "white" ? "0-1" : "1-0", reason: "timeout" };
+      await db.from("games").update(timeoutUpdate).eq("id", game.id);
       throw new Error("Time ran out");
     }
 
