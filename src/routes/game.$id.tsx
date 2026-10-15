@@ -128,7 +128,7 @@ function GamePage() {
       return;
     }
     try {
-      await makeMove({ data: { gameId: id, token, from, to, promotion } });
+      await makeMove({ data: { gameId: id, token, from, to, ...(promotion ? { promotion } : {}) } });
     } catch (e) {
       setErr((e as Error).message);
       const { data } = await supabase.from("games").select("*").eq("id", id).single();
