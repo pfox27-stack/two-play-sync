@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { loadSoundSettings, playSound, setSoundEnabled, setSoundVolume, unlockAudio } from "@/lib/sounds";
 import { Chess } from "chess.js";
 import { supabase } from "@/integrations/supabase/client";
 import { gameAction, getMySeat, joinGame, makeMove } from "@/lib/game.functions";
@@ -86,6 +87,44 @@ function GamePage() {
   const history = chess.history({ verbose: true });
   const last = history[history.length - 1];
   const turn = chess.turn() === "w" ? "white" : "black";
+
+  // sounds: one per move count, never stacked
+  const [soundOn, setSoundOn] = useState(true);
+  const [vol, setVol] = useState(0.7);
+  useEffect(() => {
+    const s = loadSoundSettings();
+    setSoundOn(s.enabled);
+    setVol(s.volume);
+    const unlock = () => unlockAudio();
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+  const soundCount = useRef<number | null>(null);
+  const endPlayed = useRef(false);
+  useEffect(() => {
+    if (!game) return;
+    const n = history.length;
+    if (soundCount.current === null) {
+      soundCount.current = n;
+      endPlayed.current = game.status === "finished";
+      return;
+    }
+    if (n > soundCount.current && last) {
+      if (last.san.includes("+") || last.san.includes("#")) playSound("check");
+      else if (last.flags.includes("k") || last.flags.includes("q")) playSound("castle");
+      else if (last.captured) playSound("capture");
+      else playSound("move");
+    }
+    soundCount.current = n;
+    if (game.status === "finished" && !endPlayed.current) {
+      endPlayed.current = true;
+      setTimeout(() => playSound("end"), 150);
+    }
+  }, [game, history.length, last]);
 
   const clock = useCallback(
     (c: "white" | "black") => {
@@ -193,9 +232,11 @@ function GamePage() {
         <ChessBoard
           fen={game.fen}
           orientation={orientation}
-          canMove={!!myColor && game.status === "active" && myColor === orientation}
+          playerColor={myColor ? (myColor === "white" ? "w" : "b") : null}
+          active={game.status === "active"}
           lastMove={last ? { from: last.from, to: last.to } : null}
           onMove={move}
+          onPremoveSet={() => playSound("premove")}
         />
         <PlayerBar c={bottom} />
       </div>
@@ -259,6 +300,34 @@ function GamePage() {
           <Button variant="secondary" disabled={!myColor || game.status !== "active"} onClick={() => act("resign")}>Resign</Button>
           <Button variant="secondary" disabled={!myColor || game.status !== "active" || !!game.draw_offer} onClick={() => act("offer_draw")}>Draw</Button>
           <Button variant="secondary" onClick={() => setFlipped((f) => !f)}>Flip</Button>
+        </div>
+        <div className="flex items-center gap-3 rounded-lg bg-secondary p-3 text-sm">
+          <label className="flex items-center gap-2 font-semibold">
+            <input
+              type="checkbox"
+              checked={soundOn}
+              onChange={(e) => {
+                setSoundOn(e.target.checked);
+                setSoundEnabled(e.target.checked);
+              }}
+            />
+            Sound
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={vol}
+            disabled={!soundOn}
+            aria-label="Volume"
+            className="flex-1 accent-primary"
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setVol(v);
+              setSoundVolume(v);
+            }}
+          />
         </div>
         {err && <p className="text-sm text-destructive">{err}</p>}
       </aside>
