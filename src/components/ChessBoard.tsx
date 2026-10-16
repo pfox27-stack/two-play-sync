@@ -50,6 +50,8 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   const [highlights, setHighlights] = useState<Map<string, ArrowColor>>(new Map());
   const [rdrag, setRdrag] = useState<{ from: Square; to: Square; color: ArrowColor } | null>(null);
   const skipSlide = useRef<string | null>(null);
+  const onMoveRef = useRef(onMove);
+  onMoveRef.current = onMove;
 
   const myTurn = !!playerColor && chess.turn() === playerColor;
   const flip = orientation === "black";
@@ -100,10 +102,10 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
     const t = setTimeout(() => {
       setPremove(null);
       const m = chess.moves({ square: pm.from, verbose: true }).find((mv) => mv.to === pm.to);
-      if (m) onMove(pm.from, pm.to, m.promotion ? "q" : undefined);
+      if (m) onMoveRef.current(pm.from, pm.to, m.promotion ? "q" : undefined);
     }, 50);
     return () => clearTimeout(t);
-  }, [fen, myTurn, premove, active, chess, onMove]);
+  }, [fen, myTurn, premove, active, chess]);
 
   useEffect(() => {
     if (!active) setPremove(null);
