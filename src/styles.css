@@ -132,3 +132,37 @@
 .piece-white { color: var(--piece-white); text-shadow: 0 0 2px var(--piece-black), 0 1px 0 var(--piece-black), 0 -1px 0 var(--piece-black), 1px 0 0 var(--piece-black), -1px 0 0 var(--piece-black); }
 .piece-black { color: var(--piece-black); text-shadow: 0 1px 1px oklch(1 0 0 / 0.3); }
 .check-glow { background-image: radial-gradient(circle, var(--square-check) 0%, transparent 75%); }
+
+:root {
+  --flat-white-fill: oklch(0.97 0 0);
+  --flat-white-stroke: oklch(0.25 0 0);
+  --flat-black-fill: oklch(0.27 0 0);
+  --flat-black-stroke: oklch(0.88 0 0);
+  --square-premove: oklch(0.65 0.19 40 / 0.55);
+  --arrow-green: oklch(0.62 0.17 145);
+  --arrow-red: oklch(0.6 0.22 27);
+  --arrow-yellow: oklch(0.82 0.17 90);
+  --arrow-blue: oklch(0.6 0.15 250);
+}
+.bg-square-premove { background-color: var(--square-premove); }
+.flat-white path { fill: var(--flat-white-fill); stroke: var(--flat-white-stroke); }
+.flat-black path { fill: var(--flat-black-fill); stroke: var(--flat-black-stroke); }
+.arrow-green { stroke: var(--arrow-green); fill: var(--arrow-green); }
+.arrow-red { stroke: var(--arrow-red); fill: var(--arrow-red); }
+.arrow-yellow { stroke: var(--arrow-yellow); fill: var(--arrow-yellow); }
+.arrow-blue { stroke: var(--arrow-blue); fill: var(--arrow-blue); }
+.hl-green { background-color: color-mix(in oklch, var(--arrow-green) 60%, transparent); }
+.hl-red { background-color: color-mix(in oklch, var(--arrow-red) 60%, transparent); }
+.hl-yellow { background-color: color-mix(in oklch, var(--arrow-yellow) 60%, transparent); }
+.hl-blue { background-color: color-mix(in oklch, var(--arrow-blue) 60%, transparent); }
+
+@keyframes piece-slide { from { transform: translate(var(--dx), var(--dy)); } to { transform: translate(0, 0); } }
+@keyframes piece-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes piece-vanish { from { transform: scale(1); opacity: 1; } to { transform: scale(0.4); opacity: 0; } }
+.piece-slide { animation: piece-slide 170ms ease-out; }
+.piece-pop { animation: piece-pop 140ms ease-out 150ms; }
+.piece-vanish { animation: piece-vanish 150ms ease-out forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .piece-slide, .piece-pop { animation: none; }
+  .piece-vanish { animation-duration: 1ms; }
+}
