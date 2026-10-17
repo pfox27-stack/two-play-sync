@@ -232,10 +232,12 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   });
 
   // ---- sway animation loop: tilt with cursor speed, spring back to upright ----
+  const dragRef = useRef(drag);
+  dragRef.current = drag;
   useEffect(() => {
-    if (!drag?.moved) return;
+    if (!dragRef.current?.moved) return;
     const s = sway.current;
-    s.lastX = drag.x;
+    s.lastX = dragRef.current.x;
     s.lastT = performance.now();
     s.vx = 0;
     s.rot = 0;
@@ -255,7 +257,8 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
       s.rot = 0;
       if (swayEl.current) swayEl.current.style.transform = "";
     };
-  }, [drag?.moved, drag]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag?.moved]);
 
   // ---- coordinates helpers for arrows ----
   function center(sq: string): [number, number] {
