@@ -52,6 +52,9 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   const skipSlide = useRef<string | null>(null);
   const onMoveRef = useRef(onMove);
   onMoveRef.current = onMove;
+  // held-piece sway: tracks cursor velocity and tilts the dragged piece
+  const swayEl = useRef<HTMLDivElement>(null);
+  const sway = useRef({ lastX: 0, lastT: 0, vx: 0, rot: 0 });
 
   const myTurn = !!playerColor && chess.turn() === playerColor;
   const flip = orientation === "black";
@@ -180,7 +183,14 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   useEffect(() => {
     if (!drag && !rdrag) return;
     const move = (e: PointerEvent) => {
-      if (drag) setDrag((d) => d && { ...d, x: e.clientX, y: e.clientY, moved: true });
+      if (drag) {
+        const s = sway.current;
+        const dt = Math.max(1, e.timeStamp - s.lastT);
+        s.vx = s.vx * 0.6 + ((e.clientX - s.lastX) / dt) * 0.4; // px/ms, smoothed
+        s.lastX = e.clientX;
+        s.lastT = e.timeStamp;
+        setDrag((d) => d && { ...d, x: e.clientX, y: e.clientY, moved: true });
+      }
       if (rdrag) {
         const sq = squareAt(e.clientX, e.clientY);
         if (sq) setRdrag((r) => r && { ...r, to: sq });
