@@ -231,6 +231,32 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
     };
   });
 
+  // ---- sway animation loop: tilt with cursor speed, spring back to upright ----
+  useEffect(() => {
+    if (!drag?.moved) return;
+    const s = sway.current;
+    s.lastX = drag.x;
+    s.lastT = performance.now();
+    s.vx = 0;
+    s.rot = 0;
+    let raf = 0;
+    const tick = () => {
+      // velocity decays when the cursor stops, so target eases back to 0
+      s.vx *= 0.9;
+      const target = Math.max(-15, Math.min(15, s.vx * 22));
+      // springy approach: slight overshoot via underdamped lerp
+      s.rot += (target - s.rot) * 0.16;
+      if (swayEl.current) swayEl.current.style.transform = `rotate(${s.rot}deg)`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      s.rot = 0;
+      if (swayEl.current) swayEl.current.style.transform = "";
+    };
+  }, [drag?.moved, drag]);
+
   // ---- coordinates helpers for arrows ----
   function center(sq: string): [number, number] {
     const f = FILES.indexOf(sq[0]!);
@@ -368,8 +394,9 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
         if (!p) return null;
         return (
           <div
+            ref={swayEl}
             className="pointer-events-none fixed z-50"
-            style={{ left: drag.x - (size * 1.1) / 2, top: drag.y - (size * 1.1) / 2, width: size * 1.1, height: size * 1.1 }}
+            style={{ left: drag.x - (size * 1.1) / 2, top: drag.y - (size * 1.1) / 2, width: size * 1.1, height: size * 1.1, transformOrigin: "50% 15%" }}
           >
             <Piece type={p.type} color={p.color} className="h-[88%] w-[88%] translate-x-[6%] translate-y-[6%]" />
           </div>
