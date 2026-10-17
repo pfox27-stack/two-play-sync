@@ -21,9 +21,9 @@ type Arrow = { from: Square; to: Square; color: ArrowColor };
 
 function colorFor(e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): ArrowColor {
   if (e.shiftKey) return "red";
-  if (e.ctrlKey || e.metaKey) return "yellow";
+  if (e.ctrlKey || e.metaKey) return "green";
   if (e.altKey) return "blue";
-  return "green";
+  return "yellow";
 }
 
 /** Pseudo-legal destinations for my piece as if it were my turn. */
@@ -268,8 +268,8 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
 
   const ranks = flip ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
   const files = flip ? FILES.split("").reverse() : FILES.split("");
-  const allArrows: Arrow[] = [...arrows];
-  if (rdrag && rdrag.from !== rdrag.to) allArrows.push(rdrag);
+  // No live preview: arrows only appear after the right button is released.
+  const allArrows: Arrow[] = arrows;
 
   function slideStyle(from: string, to: string): React.CSSProperties {
     const [fx, fy] = center(from);
@@ -343,7 +343,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
         {allArrows.map((a, i) => {
           const { line, headPts } = arrowShape(a);
           return (
-            <g key={`${a.from}->${a.to}-${i}`} opacity={0.8} className={`arrow-${a.color}`}>
+            <g key={`${a.from}->${a.to}-${i}`} opacity={0.55} className={`arrow-${a.color}`}>
               <path d={line} fill="none" strokeWidth={0.18} strokeLinejoin="round" strokeLinecap="butt" />
               <polygon points={headPts} stroke="none" />
             </g>
