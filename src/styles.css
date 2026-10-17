@@ -157,12 +157,13 @@
 .hl-blue { background-color: color-mix(in oklch, var(--arrow-blue) 60%, transparent); }
 
 @keyframes piece-slide { from { transform: translate(var(--dx), var(--dy)); } to { transform: translate(0, 0); } }
+@keyframes piece-blur { 0% { filter: blur(0); } 45% { filter: blur(2.2px); } 100% { filter: blur(0); } }
 @keyframes piece-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes piece-vanish { from { transform: scale(1); opacity: 1; } to { transform: scale(0.4); opacity: 0; } }
-.piece-slide { animation: piece-slide 170ms ease-out; }
+.piece-slide { animation: piece-slide 170ms ease-out, piece-blur 170ms ease-out; }
 .piece-pop { animation: piece-pop 140ms ease-out 150ms; }
 .piece-vanish { animation: piece-vanish 150ms ease-out forwards; }
 @media (prefers-reduced-motion: reduce) {
-  .piece-slide, .piece-pop { animation: none; }
+  .piece-slide, .piece-pop, .piece-blur { animation: none; }
   .piece-vanish { animation-duration: 1ms; }
 }
