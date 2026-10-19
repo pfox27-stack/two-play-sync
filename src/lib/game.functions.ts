@@ -132,6 +132,7 @@ export const makeMove = createServerFn({ method: "POST" })
       fen: chess.fen(),
       pgn: chess.pgn(),
       moves: [...history, move.san],
+      move_times: [...((game.move_times as number[]) ?? []), elapsed],
       [key]: remaining + game.increment_ms,
       last_move_at: new Date(now).toISOString(),
       draw_offer: null,
