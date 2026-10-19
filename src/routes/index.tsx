@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { createGame } from "@/lib/game.functions";
+import { useEffect, useRef, useState } from "react";
+import { createGame, joinQueue, leaveQueue, pollQueue } from "@/lib/game.functions";
 import { loadName, saveName, saveSeat } from "@/lib/seats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,64 @@ function Index() {
 
   useEffect(() => setName(loadName()), []);
 
+  // ---- random matchmaking ----
+  const [queue, setQueue] = useState<{ queueId: string; secret: string } | null>(null);
+  const [waitSec, setWaitSec] = useState(0);
+  const queueRef = useRef(queue);
+  queueRef.current = queue;
+
+  async function findMatch() {
+    if (!name.trim()) return setErr("Enter your name first");
+    setErr("");
+    setBusy(true);
+    try {
+      saveName(name.trim());
+      const r = await joinQueue({ data: { name: name.trim(), baseMin: tc.base, incSec: tc.inc } });
+      if (r.matched) {
+        saveSeat(r.gameId, r.token);
+        navigate({ to: "/game/$id", params: { id: r.gameId } });
+        return;
+      }
+      setWaitSec(0);
+      setQueue({ queueId: r.queueId, secret: r.secret });
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+    setBusy(false);
+  }
+
+  useEffect(() => {
+    if (!queue) return;
+    const started = Date.now();
+    const i = setInterval(async () => {
+      setWaitSec(Math.floor((Date.now() - started) / 1000));
+      try {
+        const r = await pollQueue({ data: queue });
+        if (r.gameId && r.token) {
+          clearInterval(i);
+          saveSeat(r.gameId, r.token);
+          setQueue(null);
+          navigate({ to: "/game/$id", params: { id: r.gameId } });
+        }
+      } catch {
+        /* keep trying */
+      }
+    }, 1500);
+    return () => clearInterval(i);
+  }, [queue, navigate]);
+
+  // leave the queue if the page is closed while waiting
+  useEffect(() => {
+    const bye = () => queueRef.current && leaveQueue({ data: queueRef.current });
+    window.addEventListener("pagehide", bye);
+    return () => window.removeEventListener("pagehide", bye);
+  }, []);
+
+  function cancelQueue() {
+    if (queue) leaveQueue({ data: queue });
+    setQueue(null);
+  }
+
   async function start() {
     if (!name.trim()) return setErr("Enter your name first");
     setBusy(true);
@@ -58,7 +116,7 @@ function Index() {
         <h1 className="text-center text-4xl font-extrabold tracking-tight">
           <span className="text-primary">♞</span> Checkmate Online
         </h1>
-        <p className="mt-2 text-center text-muted-foreground">Create a game, send the link, play on two devices.</p>
+        <p className="mt-2 text-center text-muted-foreground">Play a friend with a link, or get matched with a random opponent.</p>
 
         <div className="mt-8 space-y-6 rounded-xl bg-card p-6">
           <div>
@@ -98,8 +156,19 @@ function Index() {
           </div>
           {err && <p className="text-sm text-destructive">{err}</p>}
           <Button size="lg" className="w-full text-lg font-bold" disabled={busy} onClick={start}>
-            {busy ? "Creating…" : "Play a Friend"}
+            {busy ? "Please wait…" : "Play a Friend"}
           </Button>
+          {queue ? (
+            <div className="space-y-2 rounded-lg bg-secondary p-3 text-center">
+              <p className="font-semibold">Searching for an opponent… {waitSec}s</p>
+              <p className="text-xs text-muted-foreground">{tc.label} · you'll get a random color</p>
+              <Button variant="outline" className="w-full" onClick={cancelQueue}>Cancel</Button>
+            </div>
+          ) : (
+            <Button size="lg" variant="secondary" className="w-full text-lg font-bold" disabled={busy} onClick={findMatch}>
+              Play a Random Opponent
+            </Button>
+          )}
         </div>
       </div>
     </main>
