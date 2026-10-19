@@ -100,6 +100,45 @@ export type Database = {
         }
         Relationships: []
       }
+      match_queue: {
+        Row: {
+          base_min: number
+          color: string | null
+          created_at: string
+          game_id: string | null
+          id: string
+          inc_sec: number
+          last_seen: string
+          name: string
+          seat_token: string | null
+          secret: string
+        }
+        Insert: {
+          base_min: number
+          color?: string | null
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          inc_sec: number
+          last_seen?: string
+          name: string
+          seat_token?: string | null
+          secret: string
+        }
+        Update: {
+          base_min?: number
+          color?: string | null
+          created_at?: string
+          game_id?: string | null
+          id?: string
+          inc_sec?: number
+          last_seen?: string
+          name?: string
+          seat_token?: string | null
+          secret?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
