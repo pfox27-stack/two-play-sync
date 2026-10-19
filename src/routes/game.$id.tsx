@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { gameAction, getMySeat, joinGame, makeMove } from "@/lib/game.functions";
 import { loadName, loadSeat, saveName, saveSeat } from "@/lib/seats";
 import { ChessBoard } from "@/components/ChessBoard";
+import { Confetti } from "@/components/Confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
@@ -215,10 +216,17 @@ function GamePage() {
 
   const rows: [string, string | undefined][] = [];
   const sans = (game.moves as string[]) ?? [];
+  const times = (game.move_times as number[] | null) ?? [];
   for (let i = 0; i < sans.length; i += 2) {
     const w = sans[i];
     if (w) rows.push([w, sans[i + 1]]);
   }
+  const tfmt = (ms: number | undefined) => (ms === undefined ? "" : ms < 60000 ? `${(ms / 1000).toFixed(1)}s` : fmt(ms));
+  const iWon =
+    game.status === "finished" &&
+    game.reason === "checkmate" &&
+    !!myColor &&
+    ((game.result === "1-0" && myColor === "white") || (game.result === "0-1" && myColor === "black"));
 
   const resultText =
     game.result === "1/2-1/2"
@@ -272,15 +280,28 @@ function GamePage() {
 
         {!myColor && game.status !== "waiting" && <p className="text-sm text-muted-foreground">Spectating live</p>}
 
-        <div className="max-h-72 min-h-32 overflow-y-auto rounded-lg bg-background/40 p-2 font-mono text-sm">
-          {rows.length === 0 && <p className="p-2 text-muted-foreground">No moves yet</p>}
-          {rows.map(([w, b], i) => (
-            <div key={i} className={`grid grid-cols-[2.5rem_1fr_1fr] px-2 py-0.5 ${i % 2 ? "bg-secondary/40" : ""}`}>
-              <span className="text-muted-foreground">{i + 1}.</span>
-              <span className={i * 2 === sans.length - 1 ? "rounded bg-accent px-1 font-bold" : "px-1"}>{w}</span>
-              <span className={i * 2 + 1 === sans.length - 1 ? "rounded bg-accent px-1 font-bold" : "px-1"}>{b}</span>
-            </div>
-          ))}
+        <div className="rounded-lg bg-background/40">
+          <div className="grid grid-cols-[2rem_1fr_1fr] border-b border-border px-2 py-1 text-xs font-semibold text-muted-foreground">
+            <span>#</span>
+            <span>{game.white_name ?? "White"}</span>
+            <span>{game.black_name ?? "Black"}</span>
+          </div>
+          <div className="max-h-72 min-h-32 overflow-y-auto p-1 font-mono text-sm">
+            {rows.length === 0 && <p className="p-2 text-muted-foreground">No moves yet</p>}
+            {rows.map(([w, b], i) => (
+              <div key={i} className={`grid grid-cols-[2rem_1fr_1fr] px-1 py-0.5 ${i % 2 ? "bg-secondary/40" : ""}`}>
+                <span className="text-muted-foreground">{i + 1}.</span>
+                <span className="flex items-baseline gap-1.5">
+                  <span className={i * 2 === sans.length - 1 ? "rounded bg-accent px-1 font-bold" : "px-1"}>{w}</span>
+                  <span className="text-[11px] text-muted-foreground">{tfmt(times[i * 2])}</span>
+                </span>
+                <span className="flex items-baseline gap-1.5">
+                  {b && <span className={i * 2 + 1 === sans.length - 1 ? "rounded bg-accent px-1 font-bold" : "px-1"}>{b}</span>}
+                  {b && <span className="text-[11px] text-muted-foreground">{tfmt(times[i * 2 + 1])}</span>}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {oppOfferedDraw && game.status === "active" && (
@@ -332,6 +353,7 @@ function GamePage() {
         {err && <p className="text-sm text-destructive">{err}</p>}
       </aside>
 
+      {iWon && <Confetti />}
       {game.status === "finished" && showOver && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-4">
           <div className="w-full max-w-xs rounded-xl bg-card p-6 text-center">
