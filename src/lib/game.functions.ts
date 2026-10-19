@@ -180,3 +180,99 @@ export const gameAction = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ---- Random matchmaking queue ----
+// Entries are service-role only; a player proves ownership of their entry with a secret.
+export const joinQueue = createServerFn({ method: "POST" })
+  .inputValidator((d: { name: string; baseMin: number; incSec: number }) => ({
+    name: str(d.name, 24).trim(),
+    baseMin: Math.min(180, Math.max(1, Math.round(Number(d.baseMin) || 5))),
+    incSec: Math.min(60, Math.max(0, Math.round(Number(d.incSec) || 0))),
+  }))
+  .handler(async ({ data }) => {
+    const db = await admin();
+    const fresh = new Date(Date.now() - 10000).toISOString();
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { data: waiting } = await db
+        .from("match_queue")
+        .select("*")
+        .is("game_id", null)
+        .eq("base_min", data.baseMin)
+        .eq("inc_sec", data.incSec)
+        .gte("last_seen", fresh)
+        .order("created_at")
+        .limit(1);
+      const opp = waiting?.[0];
+      if (!opp) break;
+      // claim the opponent atomically
+      const oppColor: Color = Math.random() < 0.5 ? "white" : "black";
+      const myColor: Color = oppColor === "white" ? "black" : "white";
+      const oppToken = randomToken();
+      const { data: claimed } = await db
+        .from("match_queue")
+        .update({ seat_token: oppToken, color: oppColor, game_id: crypto.randomUUID() })
+        .eq("id", opp.id)
+        .is("game_id", null)
+        .select("id");
+      if (!claimed?.length) continue;
+      const base = data.baseMin * 60000;
+      const { data: game, error } = await db
+        .from("games")
+        .insert({
+          white_name: myColor === "white" ? data.name : opp.name,
+          black_name: myColor === "black" ? data.name : opp.name,
+          base_ms: base,
+          increment_ms: data.incSec * 1000,
+          white_time_ms: base,
+          black_time_ms: base,
+          status: "active",
+          last_move_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      const myToken = randomToken();
+      await db.from("game_seats").insert([
+        { game_id: game.id, color: myColor, token: myToken },
+        { game_id: game.id, color: oppColor, token: oppToken },
+      ]);
+      await db.from("match_queue").update({ game_id: game.id }).eq("id", opp.id);
+      return { matched: true as const, gameId: game.id, token: myToken };
+    }
+    const secret = randomToken();
+    const { data: entry, error } = await db
+      .from("match_queue")
+      .insert({ name: data.name, base_min: data.baseMin, inc_sec: data.incSec, secret })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { matched: false as const, queueId: entry.id, secret };
+  });
+
+export const pollQueue = createServerFn({ method: "POST" })
+  .inputValidator((d: { queueId: string; secret: string }) => ({ queueId: str(d.queueId, 64), secret: str(d.secret, 100) }))
+  .handler(async ({ data }) => {
+    const db = await admin();
+    const { data: rows } = await db.from("match_queue").select("*").eq("id", data.queueId).eq("secret", data.secret);
+    const e = rows?.[0];
+    if (!e) throw new Error("Not in queue");
+    if (e.game_id && e.seat_token) {
+      // only report once the game row actually exists
+      const { data: g } = await db.from("games").select("id").eq("id", e.game_id);
+      if (g?.length) {
+        await db.from("match_queue").delete().eq("id", e.id);
+        return { gameId: e.game_id, token: e.seat_token };
+      }
+      return { gameId: null, token: null };
+    }
+    await db.from("match_queue").update({ last_seen: new Date().toISOString() }).eq("id", e.id);
+    return { gameId: null, token: null };
+  });
+
+export const leaveQueue = createServerFn({ method: "POST" })
+  .inputValidator((d: { queueId: string; secret: string }) => ({ queueId: str(d.queueId, 64), secret: str(d.secret, 100) }))
+  .handler(async ({ data }) => {
+    const db = await admin();
+    await db.from("match_queue").delete().eq("id", data.queueId).eq("secret", data.secret).is("game_id", null);
+    return { ok: true };
+  });
