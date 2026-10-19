@@ -19,24 +19,46 @@ type Props = {
 type ArrowColor = "green" | "red" | "yellow" | "blue";
 type Arrow = { from: Square; to: Square; color: ArrowColor };
 
-function colorFor(e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): ArrowColor {
-  if (e.shiftKey) return "red";
-  if (e.ctrlKey || e.metaKey) return "green";
-  if (e.altKey) return "blue";
+function colorFor(_e: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean; altKey: boolean }): ArrowColor {
   return "yellow";
 }
 
-/** Pseudo-legal destinations for my piece as if it were my turn. */
+/** Geometric premove destinations (chess.com style): ignores blockers/occupancy so you can
+ *  premove captures and recaptures of pieces that may arrive or be exchanged. Legality is
+ *  re-checked when the premove fires. */
 function premoveTargets(fen: string, sq: Square, color: "w" | "b") {
-  const parts = fen.split(" ");
-  parts[1] = color;
-  parts[3] = "-";
+  const out = new Set<string>();
+  let piece;
   try {
-    const c = new Chess(parts.join(" "), { skipValidation: true });
-    return new Set(c.moves({ square: sq, verbose: true }).map((m) => m.to as string));
+    piece = new Chess(fen).get(sq);
   } catch {
-    return new Set<string>();
+    return out;
   }
+  if (!piece || piece.color !== color) return out;
+  const f = FILES.indexOf(sq[0]!);
+  const r = parseInt(sq[1]!, 10);
+  const add = (df: number, dr: number) => {
+    const nf = f + df, nr = r + dr;
+    if (nf >= 0 && nf < 8 && nr >= 1 && nr <= 8) out.add(`${FILES[nf]}${nr}`);
+  };
+  const ray = (df: number, dr: number) => { for (let i = 1; i < 8; i++) add(df * i, dr * i); };
+  const t = piece.type;
+  if (t === "p") {
+    const dir = color === "w" ? 1 : -1;
+    add(0, dir); add(-1, dir); add(1, dir);
+    if ((color === "w" && r === 2) || (color === "b" && r === 7)) add(0, 2 * dir);
+  } else if (t === "n") {
+    for (const [a, b] of [[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]]) add(a!, b!);
+  } else if (t === "k") {
+    for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (a || b) add(a, b);
+    const home = color === "w" ? 1 : 8;
+    if (r === home && f === 4) { add(2, 0); add(-2, 0); }
+  } else {
+    if (t !== "b") { ray(1, 0); ray(-1, 0); ray(0, 1); ray(0, -1); }
+    if (t !== "r") { ray(1, 1); ray(-1, 1); ray(1, -1); ray(-1, -1); }
+  }
+  out.delete(sq);
+  return out;
 }
 
 export function ChessBoard({ fen, orientation, playerColor, active, lastMove, onMove, onPremoveSet }: Props) {
@@ -118,7 +140,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
     const src = drag?.from ?? selected;
     if (!src || !playerColor) return new Map<string, boolean>();
     if (myTurn) return new Map(chess.moves({ square: src, verbose: true }).map((m) => [m.to as string, !!m.captured]));
-    return new Map([...premoveTargets(fen, src, playerColor)].map((s) => [s, false]));
+    return new Map([...premoveTargets(fen, src, playerColor)].map((s) => [s, !!chess.get(s as Square)]));
   }, [chess, fen, selected, drag?.from, playerColor, myTurn]);
 
   const checkSquare = chess.inCheck()
@@ -388,6 +410,20 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
             </g>
           );
         })}
+        {anim?.slide && (() => {
+          const [x1, y1] = center(anim.from);
+          const [x2, y2] = center(anim.to);
+          return (
+            <line
+              key={`trail-${fen}`}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              pathLength={1}
+              className="move-trail trail-anim"
+              strokeWidth={0.42}
+              strokeLinecap="round"
+            />
+          );
+        })()}
       </svg>
 
       {drag?.moved && boardRef.current && (() => {

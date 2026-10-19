@@ -1,57 +1,57 @@
-// Classic piece set (chess.com style) — solid fill + thin outline, shared 45x45 viewBox.
-// Shapes: rounded pawn with collar, crenellated rook, horse-head knight,
-// slit bishop with ball top, five-point crown queen, cross-topped king.
-const PATHS: Record<string, string[]> = {
-  // pawn: round head, small collar, flared body, wide base
+// Simple modern flat piece set (chess.com "neo" style): solid fill, bold dark outline,
+// a soft shade on one side, shared 45x45 viewBox.
+type P = { d: string; cls?: "shade" | "cut" };
+
+const BASE = "M10 35.5c0-1.4 1-2.5 2.5-2.5h20c1.5 0 2.5 1.1 2.5 2.5V39H10z";
+
+const PATHS: Record<string, P[]> = {
   p: [
-    "M22.5 8.5a5 5 0 1 1 0 10 5 5 0 0 1 0-10z",
-    "M17 20.5c1.8 1.2 3.4 1.8 5.5 1.8s3.7-.6 5.5-1.8l1.5 2.5c-2.2 1.4-4.4 2-7 2s-4.8-.6-7-2z",
-    "M18.5 25.5c-2.5 3-4.5 6.5-4.5 10.5h17c0-4-2-7.5-4.5-10.5-1.2.6-2.6 1-4 1s-2.8-.4-4-1z",
-    "M12.5 36h20v3.5h-20z",
+    { d: BASE },
+    { d: "M15.5 33c.5-4.5 2.5-7.5 4.5-9h-2.5a1.5 1.5 0 0 1 0-3h1.6a5.5 5.5 0 1 1 6.8 0h1.6a1.5 1.5 0 0 1 0 3H25c2 1.5 4 4.5 4.5 9z" },
+    { d: "M25.5 21a5.5 5.5 0 0 0 1.8-4.8c1.6 2 1.4 4.3-1.8 4.8zM25 24c2 1.5 4 4.5 4.5 9h-2.5c-.3-3.5-1.5-6.5-3.5-9z", cls: "shade" },
   ],
-  // rook: crenellated top, slightly tapered body, stepped base
   r: [
-    "M11 11h4v3.5h4.5V11h6v3.5H30V11h4v9l-3.5 3H14.5L11 20z",
-    "M15 23h15l1.5 10h-18z",
-    "M12 33h21v3H12z",
-    "M11 36h23v3.5H11z",
+    { d: BASE },
+    { d: "M12 9.5h4.5v3.5h3V9.5h6v3.5h3V9.5H33v7l-3 2.5v11l3 3H12l3-3V19l-3-2.5z" },
+    { d: "M15 19h15M27 19h3v11h-3z", cls: "shade" },
   ],
-  // bishop: ball top, bulbous body with diagonal slit, collar, round base
-  b: [
-    "M22.5 5.5a2.8 2.8 0 1 1 0 5.6 2.8 2.8 0 0 1 0-5.6z",
-    "M22.5 11.5c4.5 2.5 7.5 6.5 7.5 11 0 3.5-2 6.5-5 8.5h-5c-3-2-5-5-5-8.5 0-4.5 3-8.5 7.5-11z",
-    "M20.5 15.5l5 7",
-    "M17.5 31h10l1.5 3h-13z",
-    "M14 34h17c1 0 2 1 2 2.5V38H12v-1.5c0-1.5 1-2.5 2-2.5z",
-  ],
-  // knight: horse head profile facing left, arched neck, stepped base
   n: [
-    "M13.5 36.5h20v-3c0-7-1-13.5-4-17.5l1-5.5-3.5 2.5-2-3.5-2.5 4c-4.5 1-8.5 5.5-10 11l3 2 3.5-2.5 4-2c-2.5 4.5-6 6.5-6.5 12.5z",
-    "M16.5 15.5a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z",
+    { d: BASE },
+    { d: "M13.5 33c0-5 3.5-7.5 6.5-10.5 1-1 1.5-2.5 1.2-3.8-1.2 1.6-3.3 2.6-5.5 2.6l-2 2.2c-1.3 1-3 .3-3.2-1.3-.2-1.3.5-2.5 1.5-3.5l5.5-6.5c.8-1 1.5-2.2 1.5-3.7l2.5 1.8C27.5 10.8 33 16 33 25v8z" },
+    { d: "M28 14c2.7 2.8 5 6.5 5 11v8h-3.5c.3-8-1-13.5-1.5-19z", cls: "shade" },
+    { d: "M18.5 13.6a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z", cls: "cut" },
   ],
-  // queen: five-point crown with balls, wide body, stepped base
+  b: [
+    { d: BASE },
+    { d: "M22.5 4.5a2.3 2.3 0 0 1 1.2 4.3c4.6 3 7.8 8.4 7.8 13.2 0 3.6-2 6.5-5 8.2l1 2.8h-10l1-2.8c-3-1.7-5-4.6-5-8.2 0-4.8 3.2-10.2 7.8-13.2a2.3 2.3 0 0 1 1.2-4.3z" },
+    { d: "M27 13l-4.5 8.5", cls: "cut" },
+    { d: "M28.5 14c1.8 2.5 3 5.5 3 8 0 3.6-2 6.5-5 8.2h-2.5c3-1.7 4.5-4.6 4.5-8.2z", cls: "shade" },
+  ],
   q: [
-    "M10.5 12a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM17.5 8a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM27.5 8a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4zM34.5 12a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z",
-    "M22.5 6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z",
-    "M11 16.5l3 13c2-1.5 5-2.5 8.5-2.5s6.5 1 8.5 2.5l3-13-5 9-1.5-11-2.5 10h-5L17.5 14.5 16 25.5z",
-    "M14 29.5c2.5-1.5 5.5-2 8.5-2s6 .5 8.5 2l1 3.5H13z",
-    "M12 33h21v3H12z",
-    "M11 36h23v3.5H11z",
+    { d: BASE },
+    { d: "M9.5 12a2.3 2.3 0 1 1 3.4 2l2.6 10.5 3-12.5a2.3 2.3 0 1 1 2.2-.4l1.8 11 1.8-11a2.3 2.3 0 1 1 2.2.4l3 12.5L32.1 14a2.3 2.3 0 1 1 3.4-2 2.3 2.3 0 0 1-1.6 2.2L31 33H14L11.1 14.2A2.3 2.3 0 0 1 9.5 12z" },
+    { d: "M14.5 28h16", cls: "cut" },
   ],
-  // king: cross on top, rounded crown body with flared sides, stepped base
   k: [
-    "M21 4h3v3h3v3h-3v3h-3v-3h-3V7h3z",
-    "M22.5 13.5c-1.5 0-2.5 1-2.5 2.5 0 1 .5 1.8 1.2 2.3-3.5.8-6.7 3-6.7 7.2 0 3 2 5 4 5.5l-1 3h10l-1-3c2-.5 4-2.5 4-5.5 0-4.2-3.2-6.4-6.7-7.2.7-.5 1.2-1.3 1.2-2.3 0-1.5-1-2.5-2.5-2.5z",
-    "M16.5 34h12l1 2.5h-14z",
-    "M11 36.5h23v3H11z",
+    { d: BASE },
+    { d: "M21.2 3.5h2.6v2.7h2.7v2.6h-2.7v3.1h-2.6V8.8h-2.7V6.2h2.7z" },
+    { d: "M22.5 13c-2.3 0-3.6 1.6-4.3 3.4-1.6-1.8-3.7-2.6-5.7-2.2-3 .6-4.6 3.5-4 6.5.6 3.2 3.4 6 5.5 8V33h17v-4.3c2.1-2 4.9-4.8 5.5-8 .6-3-1-5.9-4-6.5-2-.4-4.1.4-5.7 2.2-.7-1.8-2-3.4-4.3-3.4z" },
+    { d: "M13 18c1.8 0 3.6 1.4 4.8 4.2l.7 2.8-3.4.6C13 24 11.5 21.5 12 19.5c.2-.9.6-1.5 1-1.5zM32 18c-1.8 0-3.6 1.4-4.8 4.2l-.7 2.8 3.4.6C32 24 33.5 21.5 33 19.5c-.2-.9-.6-1.5-1-1.5z", cls: "cut" },
   ],
 };
 
 export function Piece({ type, color, className = "" }: { type: string; color: "w" | "b"; className?: string }) {
   return (
     <svg viewBox="0 0 45 45" className={`${color === "w" ? "flat-white" : "flat-black"} ${className}`} aria-hidden>
-      {(PATHS[type] ?? []).map((d, i) => (
-        <path key={i} d={d} strokeWidth={1.2} strokeLinejoin="round" strokeLinecap="round" fillRule="evenodd" />
+      {(PATHS[type] ?? []).map((p, i) => (
+        <path
+          key={i}
+          d={p.d}
+          className={p.cls}
+          strokeWidth={p.cls === "shade" ? 0 : 1.6}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
       ))}
     </svg>
   );

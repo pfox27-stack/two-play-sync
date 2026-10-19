@@ -134,10 +134,10 @@
 .check-glow { background-image: radial-gradient(circle, var(--square-check) 0%, transparent 75%); }
 
 :root {
-  --flat-white-fill: oklch(0.97 0 0);
-  --flat-white-stroke: oklch(0.25 0 0);
-  --flat-black-fill: oklch(0.27 0 0);
-  --flat-black-stroke: oklch(0.88 0 0);
+  --flat-white-fill: oklch(0.985 0 0);
+  --flat-white-stroke: oklch(0.33 0 0);
+  --flat-black-fill: oklch(0.42 0.004 60);
+  --flat-black-stroke: oklch(0.22 0 0);
   --square-premove: oklch(0.65 0.19 40 / 0.55);
   --arrow-green: oklch(0.62 0.17 145);
   --arrow-red: oklch(0.6 0.22 27);
@@ -146,6 +146,11 @@
 }
 .bg-square-premove { background-color: var(--square-premove); }
 .flat-white path { fill: var(--flat-white-fill); stroke: var(--flat-white-stroke); }
+.flat-white .shade { fill: oklch(0.86 0 0); stroke: none; }
+.flat-black .shade { fill: oklch(0.34 0.004 60); stroke: none; }
+.flat-white .cut, .flat-black .cut { fill: none; }
+.move-trail { stroke: var(--move-trail); }
+:root { --move-trail: oklch(0.82 0.12 225); }
 .flat-black path { fill: var(--flat-black-fill); stroke: var(--flat-black-stroke); }
 .arrow-green { stroke: var(--arrow-green); fill: var(--arrow-green); }
 .arrow-red { stroke: var(--arrow-red); fill: var(--arrow-red); }
@@ -157,12 +162,14 @@
 .hl-blue { background-color: color-mix(in oklch, var(--arrow-blue) 60%, transparent); }
 
 @keyframes piece-slide { from { transform: translate(var(--dx), var(--dy)); } to { transform: translate(0, 0); } }
-@keyframes piece-blur { 0% { filter: blur(0); } 45% { filter: blur(4.5px); } 100% { filter: blur(0); } }
+@keyframes piece-blur { 0% { filter: blur(0) drop-shadow(0 0 0 var(--move-trail)); } 40% { filter: blur(7px) drop-shadow(0 0 10px var(--move-trail)); } 100% { filter: blur(0) drop-shadow(0 0 0 transparent); } }
+@keyframes trail-fade { 0% { opacity: 0.9; stroke-dashoffset: 1; } 45% { opacity: 0.85; stroke-dashoffset: 0; } 100% { opacity: 0; stroke-dashoffset: 0; } }
+.trail-anim { stroke-dasharray: 1; animation: trail-fade 900ms ease-out forwards; }
 @keyframes piece-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
 @keyframes piece-vanish { from { transform: scale(1); opacity: 1; } to { transform: scale(0.3); opacity: 0; } }
-.piece-slide { animation: piece-slide 240ms ease-out, piece-blur 240ms ease-out; }
-.piece-pop { animation: piece-pop 190ms ease-out 220ms; }
-.piece-vanish { animation: piece-vanish 210ms ease-out forwards; }
+.piece-slide { animation: piece-slide 480ms cubic-bezier(.3,.7,.3,1), piece-blur 480ms ease-in-out; }
+.piece-pop { animation: piece-pop 260ms ease-out 460ms; }
+.piece-vanish { animation: piece-vanish 420ms ease-in 120ms forwards; }
 
 @keyframes confetti-fall {
   0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
@@ -175,7 +182,8 @@
   animation: confetti-fall var(--dur) linear var(--delay) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .piece-slide, .piece-pop, .piece-blur { animation: none; }
+  .piece-slide, .piece-pop, .piece-blur, .trail-anim { animation: none; }
+  .trail-anim { opacity: 0; }
   .piece-vanish { animation-duration: 1ms; }
   .confetti-piece { animation: none; opacity: 0; }
 }

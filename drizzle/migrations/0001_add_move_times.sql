@@ -1,0 +1,1 @@
+ALTER TABLE public.games ADD COLUMN IF NOT EXISTS move_times jsonb NOT NULL DEFAULT '[]'::jsonb;

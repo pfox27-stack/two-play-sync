@@ -51,6 +51,7 @@ export type Database = {
           id: string
           increment_ms: number
           last_move_at: string | null
+          move_times: Json
           moves: Json
           pgn: string
           reason: string | null
@@ -69,6 +70,7 @@ export type Database = {
           id?: string
           increment_ms?: number
           last_move_at?: string | null
+          move_times?: Json
           moves?: Json
           pgn?: string
           reason?: string | null
@@ -87,6 +89,7 @@ export type Database = {
           id?: string
           increment_ms?: number
           last_move_at?: string | null
+          move_times?: Json
           moves?: Json
           pgn?: string
           reason?: string | null
