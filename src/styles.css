@@ -187,3 +187,42 @@
   .piece-vanish { animation-duration: 1ms; }
   .confetti-piece { animation: none; opacity: 0; }
 }
+
+/* Appearance roles are scoped to each board and shared preview. */
+.modern-white { --piece-color: var(--piece-light-color, var(--flat-white-fill)); --piece-edge: var(--flat-white-stroke); }
+.modern-black { --piece-color: var(--piece-dark-color, var(--flat-black-fill)); --piece-edge: var(--flat-black-stroke); }
+.flat-white path, .flat-black path { fill: var(--piece-color); stroke: var(--piece-edge); }
+.flat-white .shade { fill: color-mix(in oklch, var(--piece-color) 85%, var(--piece-edge)); stroke: none; }
+.flat-black .shade { fill: color-mix(in oklch, var(--piece-color) 85%, var(--piece-edge)); stroke: none; }
+.flat-white .cut, .flat-black .cut { fill: none; }
+.piece-set-classic path { stroke-width: 1; }
+.piece-set-classic { transform: scaleX(.88); }
+.piece-set-outline path, .piece-set-neon path { fill: none; stroke: var(--piece-color); stroke-width: 2; }
+.piece-set-outline, .piece-set-neon { filter: drop-shadow(0 1px 1px var(--piece-edge)); }
+.piece-set-neon { filter: drop-shadow(0 0 2px var(--piece-color)) drop-shadow(0 1px 1px var(--piece-edge)); }
+.piece-set-silhouette path { fill: var(--piece-color); stroke: none; }
+.piece-set-silhouette .cut { fill: none; stroke: var(--piece-edge); stroke-width: 1; }
+.piece-set-silhouette { filter: drop-shadow(0 1px 1px var(--piece-edge)); }
+.piece-pixel path, .piece-letters circle { fill: var(--piece-color); stroke: var(--piece-edge); stroke-width: 1.5; }
+.piece-letters text { fill: var(--piece-edge); }
+@keyframes subtle-blur { 0%, 100% { filter: blur(0); } 45% { filter: blur(var(--move-blur, .8px)); } }
+@keyframes piece-fade { 0% { transform: translate(var(--dx),var(--dy)); opacity: 1; } 45% { transform: translate(var(--dx),var(--dy)); opacity: 0; } 50% { transform: translate(0,0); opacity: 0; } 100% { opacity: 1; } }
+@keyframes capture-pop { 0% { opacity: 1; transform: scale(1); } 40% { opacity: .8; transform: scale(1.2); } 100% { opacity: 0; transform: scale(.5); } }
+@keyframes capture-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes capture-none { from, to { opacity: 0; } }
+@keyframes piece-vanish { from { transform: scale(1); opacity: 1; filter: blur(0); } to { transform: scale(.3); opacity: 0; filter: blur(var(--move-blur, .8px)); } }
+.piece-slide { animation: var(--slide-name, piece-slide) var(--move-duration, 200ms) var(--move-ease, ease-out) both, subtle-blur var(--move-duration, 200ms) ease-in-out both; }
+.piece-pop { animation: piece-pop 160ms ease-out var(--move-duration, 200ms); }
+.piece-vanish { animation: var(--capture-name, piece-vanish) var(--move-duration, 200ms) ease-out forwards; }
+@keyframes ghost-slide { 0% { transform: translate(var(--dx),var(--dy)) scale(var(--trail-scale)); opacity: .14; } 85% { opacity: .08; } 100% { transform: translate(0,0) scale(var(--trail-scale)); opacity: 0; } }
+.piece-ghost { opacity: 0; animation: ghost-slide var(--move-duration, 200ms) var(--move-ease, ease-out) both; }
+.ghost-1 { animation-delay: calc(var(--move-duration) * .06); }
+.ghost-2 { animation-delay: calc(var(--move-duration) * .12); }
+.ghost-3 { animation-delay: calc(var(--move-duration) * .18); }
+.ghost-4 { animation-delay: calc(var(--move-duration) * .24); }
+.ghost-custom { --piece-light-color: var(--trail-color); --piece-dark-color: var(--trail-color); }
+@media (prefers-reduced-motion: reduce) {
+  .piece-slide, .piece-pop { animation: none; }
+  .piece-vanish { animation: capture-none 1ms forwards; }
+  .piece-ghost { display: none; }
+}

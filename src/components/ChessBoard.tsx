@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Chess, type Square } from "chess.js";
 import { Piece } from "./Pieces";
+import { appearanceStyle, useAppearance } from "@/lib/appearance";
+import { Button } from "./ui/button";
 
 const FILES = "abcdefgh";
 
@@ -62,6 +64,7 @@ function premoveTargets(fen: string, sq: Square, color: "w" | "b") {
 }
 
 export function ChessBoard({ fen, orientation, playerColor, active, lastMove, onMove, onPremoveSet }: Props) {
+  const { settings } = useAppearance();
   const chess = useMemo(() => new Chess(fen), [fen]);
   const boardRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Square | null>(null);
@@ -257,7 +260,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   const dragRef = useRef(drag);
   dragRef.current = drag;
   useEffect(() => {
-    if (!dragRef.current?.moved) return;
+    if (!dragRef.current?.moved || !settings.animation.sway || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const s = sway.current;
     s.lastX = dragRef.current.x;
     s.lastT = performance.now();
@@ -267,7 +270,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
     const tick = () => {
       // velocity decays when the cursor stops, so target eases back to 0
       s.vx *= 0.9;
-      const target = Math.max(-15, Math.min(15, s.vx * 22));
+      const target = Math.max(-15, Math.min(15, s.vx * 22 * settings.animation.strength / 100));
       // springy approach: slight overshoot via underdamped lerp
       s.rot += (target - s.rot) * 0.16;
       if (swayEl.current) swayEl.current.style.transform = `rotate(${s.rot}deg)`;
@@ -280,7 +283,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
       if (swayEl.current) swayEl.current.style.transform = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drag?.moved]);
+  }, [drag?.moved, settings.animation.sway, settings.animation.strength]);
 
   // ---- coordinates helpers for arrows ----
   function center(sq: string): [number, number] {
@@ -341,6 +344,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   return (
     <div
       ref={boardRef}
+      style={appearanceStyle(settings)}
       onPointerDown={onPointerDown}
       onContextMenu={(e) => e.preventDefault()}
       className="relative aspect-square w-full touch-none select-none overflow-hidden rounded-md shadow-board"
@@ -377,17 +381,22 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
                     <Piece type={cap.type} color={cap.color} className="h-[88%] w-[88%]" />
                   </div>
                 )}
+                {piece && anim && settings.animation.trail !== "off" && ((isMover && anim.slide) || isRook) && [1, 2, 3, 4].map(n => (
+                  <div key={`ghost-${fen}-${n}`} className={`piece-ghost ghost-${n} ${settings.animation.trail === "custom" ? "ghost-custom" : ""} pointer-events-none absolute inset-0 z-10 flex items-center justify-center`} style={slideStyle(isRook && anim.rook ? anim.rook.from : anim.from, sq)}>
+                    <Piece type={piece.type} color={piece.color} className="h-[88%] w-[88%]" />
+                  </div>
+                ))}
                 {piece && (
                   <div
                     key={isMover || isRook ? `a-${fen}` : "p"}
                     style={
-                      isMover && anim!.slide ? slideStyle(anim!.from, sq) : isRook ? slideStyle(anim!.rook!.from, sq) : undefined
+                      isMover && anim?.slide ? slideStyle(anim.from, sq) : isRook && anim?.rook ? slideStyle(anim.rook.from, sq) : undefined
                     }
                     className={`absolute inset-0 z-10 flex items-center justify-center ${
-                      (isMover && anim!.slide) || isRook ? "piece-slide z-20" : ""
+                      (isMover && anim?.slide) || isRook ? "piece-slide z-20" : ""
                     } ${dragging ? "opacity-30" : ""} ${isMine(sq) ? "cursor-grab" : ""}`}
                   >
-                    <div className={`flex h-full w-full items-center justify-center ${isMover && (anim!.captured || anim!.promoted) ? "piece-pop" : ""}`}>
+                    <div className={`flex h-full w-full items-center justify-center ${isMover && (anim?.captured || anim?.promoted) ? "piece-pop" : ""}`}>
                       <Piece type={piece.type} color={piece.color} className="h-[88%] w-[88%]" />
                     </div>
                   </div>
@@ -410,20 +419,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
             </g>
           );
         })}
-        {anim?.slide && (() => {
-          const [x1, y1] = center(anim.from);
-          const [x2, y2] = center(anim.to);
-          return (
-            <line
-              key={`trail-${fen}`}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              pathLength={1}
-              className="move-trail trail-anim"
-              strokeWidth={0.42}
-              strokeLinecap="round"
-            />
-          );
-        })()}
+
       </svg>
 
       {drag?.moved && boardRef.current && (() => {
@@ -456,7 +452,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
                 className="flex h-16 w-16 items-center justify-center rounded bg-square-light hover:bg-square-last"
               >
                 <Piece type={p} color={playerColor ?? "w"} className="h-12 w-12" />
-              </button>
+              </Button>
             ))}
           </div>
         </div>

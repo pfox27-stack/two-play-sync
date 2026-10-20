@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Checkmate Online — Play chess with a friend" },
+      { title: "Gambiteer — Play chess with a friend" },
       { name: "description", content: "Create a chess game, share the link, and play live against a friend on any device." },
-      { property: "og:title", content: "Checkmate Online — Play chess with a friend" },
+      { property: "og:title", content: "Gambiteer — Play chess with a friend" },
       { property: "og:description", content: "Real-time two-device chess with clocks and invite links." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,7 +30,7 @@ const CONTROLS = [
 function Index() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [tc, setTc] = useState(CONTROLS[2] ?? CONTROLS[0]!);
+  const [tc, setTc] = useState(CONTROLS[2] ?? { label: "5 | 0", group: "Blitz", base: 5, inc: 0 });
   const [color, setColor] = useState<"white" | "black" | "random">("random");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -113,8 +113,8 @@ function Index() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        <h1 className="text-center text-4xl font-extrabold tracking-tight">
-          <span className="text-primary">♞</span> Checkmate Online
+        <h1 className="text-center text-4xl font-extrabold tracking-normal">
+          <span className="text-primary">♞</span> Gambiteer
         </h1>
         <p className="mt-2 text-center text-muted-foreground">Play a friend with a link, or get matched with a random opponent.</p>
 

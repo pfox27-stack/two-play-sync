@@ -16,7 +16,7 @@ type Game = Database["public"]["Tables"]["games"]["Row"];
 export const Route = createFileRoute("/game/$id")({
   head: () => ({
     meta: [
-      { title: "Live chess game — Checkmate Online" },
+      { title: "Live chess game — Gambiteer" },
       { name: "description", content: "Join or watch this live chess game." },
       { property: "og:title", content: "You're invited to a chess game" },
       { property: "og:description", content: "Open the link to play or watch live." },
