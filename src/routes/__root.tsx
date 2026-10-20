@@ -10,6 +10,9 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { AppearanceProvider } from "@/lib/appearance";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
+
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -78,9 +81,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Checkmate Online" },
+      { title: "Gambiteer" },
       { name: "description", content: "Play live chess with a friend on two devices." },
-      { property: "og:title", content: "Checkmate Online" },
+      { property: "og:title", content: "Gambiteer" },
       { property: "og:description", content: "Play live chess with a friend on two devices." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -122,7 +125,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AppearanceProvider><Outlet /><AppearanceSettings /></AppearanceProvider>
     </QueryClientProvider>
   );
 }

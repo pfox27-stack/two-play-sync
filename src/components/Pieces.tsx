@@ -1,3 +1,4 @@
+import { useAppearance } from "@/lib/appearance";
 // Simple modern flat piece set (chess.com "neo" style): solid fill, bold dark outline,
 // a soft shade on one side, shared 45x45 viewBox.
 type P = { d: string; cls?: "shade" | "cut" };
@@ -40,10 +41,23 @@ const PATHS: Record<string, P[]> = {
   ],
 };
 
-export function Piece({ type, color, className = "" }: { type: string; color: "w" | "b"; className?: string }) {
+const PIXEL: Record<string, string> = {
+  p: "M18 8h9v9h-3v7h6v9h6v6H9v-6h6v-9h6v-7h-3z",
+  r: "M9 7h6v6h6V7h3v6h6V7h6v12h-6v14h6v6H9v-6h6V19H9z",
+  n: "M18 7h6v3h6v6h3v17h3v6H9v-6h6v-9h6v-6h-6v3H9v-9h6v-3h3z",
+  b: "M21 4h3v6h6v6h3v9h-6v8h9v6H9v-6h9v-8h-6v-9h3v-6h6z",
+  q: "M9 7h6v9h6V7h3v9h6V7h6v15h-6v11h6v6H9v-6h6V22H9z",
+  k: "M21 3h3v6h6v3h-6v6h9v9h-6v6h9v6H9v-6h9v-6h-6v-9h9v-6h-6V9h6z",
+};
+export function Piece({ type, color, className = "", setOverride }: { type: string; color: "w" | "b"; className?: string; setOverride?: string }) {
+  const { settings } = useAppearance();
+  const set = setOverride ?? settings.set;
+  const side = color === "w" ? "modern-white" : "modern-black";
+  if (set === "Letters") return <svg viewBox="0 0 45 45" className={`${side} piece-letters ${className}`} aria-hidden><circle cx="22.5" cy="22.5" r="17" /><text x="22.5" y="29" textAnchor="middle" fontSize="21" fontWeight="700">{type.toUpperCase()}</text></svg>;
+  if (set === "Pixel") return <svg viewBox="0 0 45 45" className={`${side} piece-pixel ${className}`} aria-hidden><path d={PIXEL[type]} /></svg>;
   return (
-    <svg viewBox="0 0 45 45" className={`${color === "w" ? "flat-white" : "flat-black"} ${className}`} aria-hidden>
-      {(PATHS[type] ?? []).map((p, i) => (
+    <svg viewBox="0 0 45 45" className={`${color === "w" ? "flat-white" : "flat-black"} ${side} piece-set-${set.toLowerCase()} ${className}`} aria-hidden>
+      {(PATHS[type] ?? []).filter(p => set === "Flat" || p.cls !== "shade").map((p, i) => (
         <path
           key={i}
           d={p.d}
