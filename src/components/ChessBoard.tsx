@@ -452,7 +452,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
                 className="flex h-16 w-16 items-center justify-center rounded bg-square-light hover:bg-square-last"
               >
                 <Piece type={p} color={playerColor ?? "w"} className="h-12 w-12" />
-              </Button>
+              </button>
             ))}
           </div>
         </div>
