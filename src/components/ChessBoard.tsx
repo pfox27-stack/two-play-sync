@@ -85,18 +85,20 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
   const flip = orientation === "black";
 
   // ---- previous position (for animations) ----
-  const [fens, setFens] = useState<{ cur: string; prev: string | null }>({ cur: fen, prev: null });
-  if (fens.cur !== fen) setFens({ cur: fen, prev: fens.cur });
-
-  const anim = useMemo(() => {
-    if (!fens.prev || !lastMove || fens.cur !== fen) return null;
-    const prev = new Chess(fens.prev);
+  type Anim = { from: Square; to: Square; slide: boolean; captured: { sq: Square; type: string; color: "w" | "b" } | null; rook: { from: Square; to: Square } | null; promoted: boolean };
+  // Animation is computed once per position change (not on every re-render, e.g. clock ticks).
+  const [animState, setAnimState] = useState<{ fen: string; anim: Anim | null }>({ fen, anim: null });
+  if (animState.fen !== fen) setAnimState({ fen, anim: computeAnim(animState.fen) });
+  const anim = animState.anim;
+  function computeAnim(prevFen: string): Anim | null {
+    if (!lastMove) return null;
+    const prev = new Chess(prevFen);
     const from = lastMove.from as Square;
     const to = lastMove.to as Square;
     const before = prev.get(from);
     const after = chess.get(to);
     if (!before || !after || before.color !== after.color) return null;
-    let captured: { sq: Square; type: string; color: "w" | "b" } | null = null;
+    let captured: Anim["captured"] = null;
     const victim = prev.get(to);
     if (victim) captured = { sq: to, type: victim.type, color: victim.color };
     else if (before.type === "p" && from[0] !== to[0]) {
@@ -104,20 +106,13 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
       const ep = prev.get(epSq);
       if (ep) captured = { sq: epSq, type: ep.type, color: ep.color };
     }
-    let rook: { from: Square; to: Square } | null = null;
+    let rook: Anim["rook"] = null;
     if (before.type === "k" && Math.abs(FILES.indexOf(from[0]!) - FILES.indexOf(to[0]!)) === 2) {
       const kingSide = to[0] === "g";
       rook = { from: `${kingSide ? "h" : "a"}${from[1]}` as Square, to: `${kingSide ? "f" : "d"}${from[1]}` as Square };
     }
-    return {
-      from,
-      to,
-      slide: skipSlide.current !== to,
-      captured,
-      rook,
-      promoted: before.type === "p" && after.type !== "p",
-    };
-  }, [fens, fen, chess, lastMove]);
+    return { from, to, slide: skipSlide.current !== to, captured, rook, promoted: before.type === "p" && after.type !== "p" };
+  }
 
   useEffect(() => {
     skipSlide.current = null;
@@ -383,7 +378,7 @@ export function ChessBoard({ fen, orientation, playerColor, active, lastMove, on
                 )}
                 {piece && anim && settings.animation.trail !== "off" && ((isMover && anim.slide) || isRook) && [1, 2, 3, 4].map(n => (
                   <div key={`ghost-${fen}-${n}`} className={`piece-ghost ghost-${n} ${settings.animation.trail === "custom" ? "ghost-custom" : ""} pointer-events-none absolute inset-0 z-10 flex items-center justify-center`} style={slideStyle(isRook && anim.rook ? anim.rook.from : anim.from, sq)}>
-                    <Piece type={piece.type} color={piece.color} className="h-[88%] w-[88%]" />
+                    <Piece type={piece.type} color={piece.color} tint={settings.animation.trail === "custom" ? settings.trailColor : undefined} className="h-[88%] w-[88%]" />
                   </div>
                 ))}
                 {piece && (
