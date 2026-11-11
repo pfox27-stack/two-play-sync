@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Chess } from 'chess.js';
 import { Settings, RotateCcw, Play } from 'lucide-react';
 import { ChessBoard } from './ChessBoard';
@@ -16,18 +16,25 @@ function Range({ label, value, max, unit = '', onChange }: { label: string; valu
 }
 export function AppearanceSettings() {
   const { settings: s, update } = useAppearance();
-  const [fen, setFen] = useState(new Chess().fen());
+  // Looping demo: a short line with a capture so every setting is visible.
+  const LINE = ['e4', 'd5', 'exd5', 'Nf6', 'Nc3', 'Nxd5'];
+  const [step, setStep] = useState(0);
   const [replay, setReplay] = useState(0);
-  const [moved, setMoved] = useState(false);
   const [tab, setTab] = useState('animations');
-  function play() { setMoved(false); setFen(new Chess().fen()); setReplay(n => n + 1); setTimeout(() => { const c = new Chess(); c.move('e4'); setFen(c.fen()); setMoved(true); }, 80); }
+  const demo = new Chess(); let last: { from: string; to: string } | null = null;
+  for (const m of LINE.slice(0, step)) { const r = demo.move(m); last = { from: r.from, to: r.to }; }
+  const fen = demo.fen();
+  const gap = Math.max(700, s.animation.duration + 600);
+  useEffect(() => { const t = setTimeout(() => setStep(n => n >= LINE.length ? 0 : n + 1), step >= LINE.length ? gap + 400 : gap); return () => clearTimeout(t); }, [step, gap, replay]);
+  const moved = step > 0;
+  function play() { setStep(0); setReplay(n => n + 1); }
   const fine = (patch: Partial<Animation>) => update({ preset: 'Custom', animation: { ...s.animation, ...patch } });
   const selectClass = 'h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm';
   return <Dialog><DialogTrigger asChild><Button variant="secondary" size="icon" aria-label="Settings" title="Settings" className="fixed right-3 top-3 z-40"><Settings className="size-5" /></Button></DialogTrigger>
     <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl"><DialogTitle>Settings</DialogTitle>
       <Tabs value={tab} onValueChange={setTab}><TabsList className="w-full"><TabsTrigger value="animations">Animations</TabsTrigger><TabsTrigger value="board">Board</TabsTrigger><TabsTrigger value="pieces">Pieces</TabsTrigger></TabsList>
       <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <div className="space-y-3"><ChessBoard key={replay} fen={fen} orientation="white" playerColor={null} active={false} lastMove={moved ? { from: 'e2', to: 'e4' } : null} onMove={() => {}} /><Button variant="outline" className="w-full" onClick={play}><Play className="size-4" />Replay move</Button></div>
+        <div className="space-y-3"><ChessBoard key={replay} fen={fen} orientation="white" playerColor={null} active={false} lastMove={moved ? last : null} onMove={() => {}} /><Button variant="outline" className="w-full" onClick={play}><Play className="size-4" />Replay move</Button></div>
         <div className="min-w-0">
           <TabsContent value="animations" className="mt-0 space-y-4">
             <label className="grid gap-2 text-sm">Preset<select aria-label="Animation preset" className={selectClass} value={s.preset} onChange={e => { const a = PRESETS[e.target.value]; if (a) { update({ preset: e.target.value, animation: { ...a } }); play(); } }}>{Object.keys(PRESETS).map(p => <option key={p}>{p}</option>)}{s.preset === 'Custom' && <option>Custom</option>}</select></label>
