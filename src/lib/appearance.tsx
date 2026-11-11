@@ -13,9 +13,9 @@ export const PRESETS: Record<string, Animation> = {
   'Slow Glide': { ...smooth, duration: 400, easing: 'ease-in-out' }, 'Motion Blur': { ...smooth, duration: 220, blur: 5 },
   'Comet Trail': { ...smooth, duration: 300, trail: 'piece' }, Fade: { ...smooth, blur: 0, easing: 'fade' }, Instant: { ...smooth, duration: 0, blur: 0 },
 };
-export const SETS = ['Flat', 'Classic', 'Outline', 'Silhouette', 'Pixel', 'Letters', 'Neon'] as const;
+export const SETS = ['Gambiteer', 'Flat', 'Classic', 'Outline', 'Silhouette', 'Pixel', 'Letters', 'Neon'] as const;
 export type Appearance = { board: string; light: string; dark: string; set: string; white: string; black: string; trailColor: string; preset: string; animation: Animation };
-export const DEFAULTS: Appearance = { board: 'Green', light: '#eef0cc', dark: '#78a354', set: 'Flat', white: '#fafafa', black: '#62615f', trailColor: '#85c9ed', preset: 'Smooth', animation: smooth };
+export const DEFAULTS: Appearance = { board: 'Green', light: '#eef0cc', dark: '#78a354', set: 'Gambiteer', white: '#fafafa', black: '#62615f', trailColor: '#85c9ed', preset: 'Smooth', animation: smooth };
 const KEY = 'gambiteer:appearance';
 const Context = createContext({ settings: DEFAULTS, update: (_patch: Partial<Appearance>) => {} });
 export function appearanceStyle(s: Appearance): CSSProperties {
@@ -35,8 +35,8 @@ export function appearanceStyle(s: Appearance): CSSProperties {
 }
 export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState(DEFAULTS);
-  useEffect(() => { try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); setSettings({ ...DEFAULTS, ...s, animation: { ...smooth, ...s.animation } }); } } catch { /* use defaults */ } }, []);
-  function update(patch: Partial<Appearance>) { setSettings(old => { const next = { ...old, ...patch }; try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* storage unavailable */ } return next; }); }
+  useEffect(() => { try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); if (!s.piecesV2) s.set = 'Gambiteer'; setSettings({ ...DEFAULTS, ...s, animation: { ...smooth, ...s.animation } }); } } catch { /* use defaults */ } }, []);
+  function update(patch: Partial<Appearance>) { setSettings(old => { const next = { ...old, ...patch }; try { localStorage.setItem(KEY, JSON.stringify({ ...next, piecesV2: true })); } catch { /* storage unavailable */ } return next; }); }
   return <Context.Provider value={{ settings, update }}><div style={appearanceStyle(settings)} className="contents">{children}</div></Context.Provider>;
 }
 export const useAppearance = () => useContext(Context);

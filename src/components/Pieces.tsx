@@ -1,4 +1,17 @@
 import { useAppearance } from "@/lib/appearance";
+import wk from "@/assets/pieces/wk.png.asset.json";
+import wq from "@/assets/pieces/wq.png.asset.json";
+import wr from "@/assets/pieces/wr.png.asset.json";
+import wb from "@/assets/pieces/wb.png.asset.json";
+import wn from "@/assets/pieces/wn.png.asset.json";
+import wp from "@/assets/pieces/wp.png.asset.json";
+import bk from "@/assets/pieces/bk.png.asset.json";
+import bq from "@/assets/pieces/bq.png.asset.json";
+import br from "@/assets/pieces/br.png.asset.json";
+import bb from "@/assets/pieces/bb.png.asset.json";
+import bn from "@/assets/pieces/bn.png.asset.json";
+import bp from "@/assets/pieces/bp.png.asset.json";
+const IMG: Record<string, string> = {wk: wk.url,wq: wq.url,wr: wr.url,wb: wb.url,wn: wn.url,wp: wp.url,bk: bk.url,bq: bq.url,br: br.url,bb: bb.url,bn: bn.url,bp: bp.url};
 // Simple modern flat piece set (chess.com "neo" style): solid fill, bold dark outline,
 // a soft shade on one side, shared 45x45 viewBox.
 type P = { d: string; cls?: "shade" | "cut" };
@@ -53,6 +66,7 @@ export function Piece({ type, color, className = "", setOverride }: { type: stri
   const { settings } = useAppearance();
   const set = setOverride ?? settings.set;
   const side = color === "w" ? "modern-white" : "modern-black";
+  if (set === "Gambiteer") return <img src={IMG[color + type]} alt="" draggable={false} aria-hidden className={`select-none object-contain ${className}`} />;
   if (set === "Letters") return <svg viewBox="0 0 45 45" className={`${side} piece-letters ${className}`} aria-hidden><circle cx="22.5" cy="22.5" r="17" /><text x="22.5" y="29" textAnchor="middle" fontSize="21" fontWeight="700">{type.toUpperCase()}</text></svg>;
   if (set === "Pixel") return <svg viewBox="0 0 45 45" className={`${side} piece-pixel ${className}`} aria-hidden><path d={PIXEL[type]} /></svg>;
   return (
