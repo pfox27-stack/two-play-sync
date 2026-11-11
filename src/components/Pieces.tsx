@@ -62,7 +62,7 @@ const PIXEL: Record<string, string> = {
   q: "M9 7h6v9h6V7h3v9h6V7h6v15h-6v11h6v6H9v-6h6V22H9z",
   k: "M21 3h3v6h6v3h-6v6h9v9h-6v6h9v6H9v-6h9v-6h-6v-9h9v-6h-6V9h6z",
 };
-export function Piece({ type, color, className = "", setOverride, tint }: { type: string; color: "w" | "b"; className?: string; setOverride?: string; tint?: string }) {
+export function Piece({ type, color, className = "", setOverride, tint }: { type: string; color: "w" | "b"; className?: string; setOverride?: string; tint?: string | undefined }) {
   const { settings } = useAppearance();
   const set = setOverride ?? settings.set;
   const side = color === "w" ? "modern-white" : "modern-black";
