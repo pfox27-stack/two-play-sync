@@ -62,11 +62,12 @@ const PIXEL: Record<string, string> = {
   q: "M9 7h6v9h6V7h3v9h6V7h6v15h-6v11h6v6H9v-6h6V22H9z",
   k: "M21 3h3v6h6v3h-6v6h9v9h-6v6h9v6H9v-6h9v-6h-6v-9h9v-6h-6V9h6z",
 };
-export function Piece({ type, color, className = "", setOverride }: { type: string; color: "w" | "b"; className?: string; setOverride?: string }) {
+export function Piece({ type, color, className = "", setOverride, tint }: { type: string; color: "w" | "b"; className?: string; setOverride?: string; tint?: string | undefined }) {
   const { settings } = useAppearance();
   const set = setOverride ?? settings.set;
   const side = color === "w" ? "modern-white" : "modern-black";
-  if (set === "Gambiteer") return <img src={IMG[color + type]} alt="" draggable={false} aria-hidden className={`select-none object-contain ${className}`} />;
+  if (set === "Gambiteer" && tint) { const u = `url(${IMG[color + type]})`; return <span aria-hidden className={`block scale-[1.12] ${className}`} style={{ background: tint, WebkitMask: `${u} center/contain no-repeat`, mask: `${u} center/contain no-repeat` }} />; }
+  if (set === "Gambiteer") return <img src={IMG[color + type]} alt="" draggable={false} aria-hidden className={`select-none object-contain scale-[1.12] ${className}`} />;
   if (set === "Letters") return <svg viewBox="0 0 45 45" className={`${side} piece-letters ${className}`} aria-hidden><circle cx="22.5" cy="22.5" r="17" /><text x="22.5" y="29" textAnchor="middle" fontSize="21" fontWeight="700">{type.toUpperCase()}</text></svg>;
   if (set === "Pixel") return <svg viewBox="0 0 45 45" className={`${side} piece-pixel ${className}`} aria-hidden><path d={PIXEL[type]} /></svg>;
   return (
