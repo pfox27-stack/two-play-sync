@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, type Square } from "chess.js";
 import { Piece } from "./Pieces";
 import { appearanceStyle, useAppearance } from "@/lib/appearance";
@@ -63,7 +63,8 @@ function premoveTargets(fen: string, sq: Square, color: "w" | "b") {
   return out;
 }
 
-export function ChessBoard({ fen, orientation, playerColor, active, lastMove, onMove, onPremoveSet }: Props) {
+export const ChessBoard = memo(ChessBoardInner);
+function ChessBoardInner({ fen, orientation, playerColor, active, lastMove, onMove, onPremoveSet }: Props) {
   const { settings } = useAppearance();
   const chess = useMemo(() => new Chess(fen), [fen]);
   const boardRef = useRef<HTMLDivElement>(null);
