@@ -227,7 +227,7 @@ function GamePage() {
   const ply = viewPly === null ? total : Math.min(viewPly, total);
   const reviewing = ply !== total;
   let viewFen = game.fen;
-  let viewLast = lastMove;
+  let viewLast: { from: string; to: string } | null = lastMove;
   if (reviewing) {
     const c = new Chess();
     let lm: { from: string; to: string } | null = null;
