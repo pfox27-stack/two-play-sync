@@ -28,6 +28,9 @@ export function AppearanceSettings() {
   useEffect(() => { const t = setTimeout(() => setStep(n => n >= LINE.length ? 0 : n + 1), step >= LINE.length ? gap + 400 : gap); return () => clearTimeout(t); }, [step, gap, replay]);
   const moved = step > 0;
   function play() { setStep(0); setReplay(n => n + 1); }
+  // Auto-replay the demo whenever any animation option changes.
+  const animKey = JSON.stringify(s.animation) + s.trailColor;
+  useEffect(() => { setStep(0); setReplay(n => n + 1); }, [animKey]);
   const fine = (patch: Partial<Animation>) => update({ preset: 'Custom', animation: { ...s.animation, ...patch } });
   const selectClass = 'h-9 w-full rounded-md border border-input bg-secondary px-2 text-sm';
   return <Dialog><DialogTrigger asChild><Button variant="secondary" size="icon" aria-label="Settings" title="Settings" className="fixed right-3 top-3 z-40"><Settings className="size-5" /></Button></DialogTrigger>
