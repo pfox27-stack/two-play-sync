@@ -276,3 +276,20 @@ export const leaveQueue = createServerFn({ method: "POST" })
     await db.from("match_queue").delete().eq("id", data.queueId).eq("secret", data.secret).is("game_id", null);
     return { ok: true };
   });
+
+export const sendChat = createServerFn({ method: "POST" })
+  .inputValidator((d: { gameId: string; token: string; body: string }) => ({
+    gameId: str(d.gameId, 64),
+    token: str(d.token, 128),
+    body: str(String(d.body ?? "").trim(), 300),
+  }))
+  .handler(async ({ data }) => {
+    const color = await seatColor(data.gameId, data.token);
+    if (!color) throw new Error("Only players can chat");
+    const db = await admin();
+    const { data: g } = await db.from("games").select("white_name, black_name").eq("id", data.gameId).single();
+    const name = (color === "white" ? g?.white_name : g?.black_name) ?? color;
+    const { error } = await db.from("game_chat").insert({ game_id: data.gameId, color, name, body: data.body });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_chat: {
+        Row: {
+          body: string
+          color: string
+          created_at: string
+          game_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          body: string
+          color: string
+          created_at?: string
+          game_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          body?: string
+          color?: string
+          created_at?: string
+          game_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_chat_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_seats: {
         Row: {
           color: string
